@@ -2,8 +2,8 @@ import os
 import shutil
 import subprocess
 
-
-def do_make():
+# runs make in created directory
+def do_make() -> bool:
     if not is_file_exists('Makefile'):
         return False
     try:
@@ -14,7 +14,7 @@ def do_make():
         print(f'Error running make {e}')
         return False
 
-def remove_directory(directory_path):
+def remove_directory(directory_path: str) -> bool:
     try:
         shutil.rmtree(directory_path)
         print(f"Directory '{directory_path}' and its contents removed successfully.")
@@ -22,13 +22,14 @@ def remove_directory(directory_path):
     except Exception as e:
         print(f"Error removing directory '{directory_path}': {e}")
         return False
+
 # checks passed path 
-def is_directory_exists(directory_path):
+def is_directory_exists(directory_path: str) -> bool:
     return os.path.exists(directory_path) and os.path.isdir(directory_path)
-def is_file_exists(directory_path):
+def is_file_exists(directory_path: str) -> bool:
     return os.path.exists(directory_path) and os.path.isfile(directory_path)
 # 
-def run_cmake():
+def run_cmake() -> bool:
     try:
         subprocess.run(['cmake', '..'], check=True)
         print('Cmake configuration completed succesfully.')
@@ -37,7 +38,7 @@ def run_cmake():
         print(f'Error running Cmake: {e}')
         return False
     
-def build_project():
+def main() -> bool:
     # user inputs what kind of build they need
     build_reg = ''
     while True:
@@ -70,12 +71,10 @@ def build_project():
     if not do_make():
         return False
     return True
-# start    
-
-if __name__ = '__main__':
-    app(main)
-    if build_project():
+  
+if __name__ == '__main__':
+    if main():
         print("Built successfully.")
-    else
-    print("Build failed")
+    else:
+        print("Build failed")
 
