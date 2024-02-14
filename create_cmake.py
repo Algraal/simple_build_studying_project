@@ -1,13 +1,6 @@
 import os
 
-def create_cmake():
-    try:
-        filehandler = open("CMakeLists.txt", "w", encoding='utf-8')
-
-    except Exception as e:
-        print(f'Error: {e}')
-        return
-
+def main() -> bool:
     raw_dir_list = os.listdir()
     if not 'main.cpp' in raw_dir_list:
         print('Error: main.cpp is not found')
@@ -17,7 +10,13 @@ def create_cmake():
     for file in raw_dir_list:
         if file.endswith('.cpp') or file.endswith('.h'):
             dir_list.append(file)
-   
+    # Block to test filehandling
+    try:
+        filehandler = open("CMakeLists.txt", "w", encoding='utf-8')
+
+    except Exception as e:
+        print(f'Error: {e}')
+        return False
     # puts main.cpp in the begining, joins list into string
     element_to_move = 'main.cpp'
     index_to_move = dir_list.index(element_to_move)
@@ -33,5 +32,7 @@ def create_cmake():
     filehandler.write(content)
     filehandler.close() 
     os.chmod("CMakeLists.txt", 0o600)
+    return True
 
-create_cmake()
+if __name__ == '__main__':
+    main()
