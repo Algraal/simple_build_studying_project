@@ -1,6 +1,8 @@
 import os
 import shutil
 import subprocess
+import sys
+import re
 
 # runs make in created directory
 def do_make() -> bool:
@@ -12,6 +14,34 @@ def do_make() -> bool:
         return True
     except subprocess.CalledProcessError as e:
         print(f'Error running make {e}')
+        return False
+# runs execuatble in the same directory if it has the same name as defined in
+# CMakeList.txt located in parent directory. Returns false if CMakeLists.txt
+# does not exist, cannot be opened, does not have project name 
+def run_build() -> bool:
+    try:
+        filehandler = open('../CMakeLists.txt', 'r', encoding='utf-8')
+        content = filehandler.read()
+        match = re.search(r'project\s*\(\s*([^\s)]+)', content)
+        filehandler.close()
+
+        if not match:
+            print("Error: Could not get project name. Aborting...")
+            return False 
+
+        executable_name = match.group(1)
+        
+        # Check if the executable exists
+        if not is_file_exists(executable_name):
+            print(f"Error: Executable '{executable_name}' does not exist")
+            return False
+        
+        print(f"Program {executable_name} started.")
+        completed_process = subprocess.run(f'./{executable_name}', check=True)
+        return True
+
+    except Exception as e:
+        print(f"Error: {e}")
         return False
 
 def remove_directory(directory_path: str) -> bool:
@@ -38,13 +68,16 @@ def run_cmake() -> bool:
         print(f'Error running Cmake: {e}')
         return False
     
-def main() -> bool:
+def main(option: str) -> bool:
     # user inputs what kind of build they need
+    if option != 'run' and option != 'build':
+        print('Undefined option. Aborting...')
+        return False
     build_reg = ''
     while True:
         build_reg = input("Enter 'build', 'debug' or 'exit' to cancel: ")
         if build_reg == 'exit':
-            print("Building was canceled. Aborting.")
+            print("Building was canceled. Aborting...")
             return False
         elif build_reg == 'build':
             break
@@ -70,10 +103,16 @@ def main() -> bool:
         return False
     if not do_make():
         return False
+    if option == 'run':
+        if run_build():
+            print('Program started.')
+        else:
+            print("Error: program start is cancelled. Aborting...")
+            return False
     return True
   
 if __name__ == '__main__':
-    if main():
+    if main(sys.argv[1]):
         print("Built successfully.")
     else:
         print("Build failed")
