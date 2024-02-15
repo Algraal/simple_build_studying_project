@@ -9,7 +9,7 @@ def do_make() -> bool:
     if not is_file_exists('Makefile'):
         return False
     try:
-        subprocess.run(['make'], check=True)
+        subprocess.run(['cmake', '..'], check=True)
         print("Make completed successfully.")
         return True
     except subprocess.CalledProcessError as e:
