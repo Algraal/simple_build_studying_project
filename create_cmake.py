@@ -1,14 +1,25 @@
 import os
 
+
+
 def main() -> bool:
     raw_dir_list = os.listdir()
-    if not 'main.cpp' in raw_dir_list:
-        print('Error: main.cpp is not found')
+    if not ('main.cpp' in raw_dir_list or 'main.c' in raw_dir_list):
+        print('Error: main.cpp/main.c is not found')
         return False
+    elif 'main.cpp' in raw_dir_list and 'main.c' in raw_dir_list:
+        print("Error: both main.cpp and main.c are in the directory")
+        return False
+    elif 'main.cpp' in raw_dir_list:
+        # possible extensions for cpp sources/headers
+        language_extensions = ['.cpp', '.h']
+    elif 'main.c' in raw_dir_list:
+        language_extensions = ['.c', '.h']
+    
     # deletes non executables files
     dir_list = []
     for file in raw_dir_list:
-        if file.endswith('.cpp') or file.endswith('.h'):
+        if file.endswith(tuple(language_extensions)):
             dir_list.append(file)
     # Block to test filehandling
     try:
@@ -18,7 +29,7 @@ def main() -> bool:
         print(f'Error: {e}')
         return False
     # puts main.cpp in the begining, joins list into string
-    element_to_move = 'main.cpp'
+    element_to_move = 'main' + language_extensions[0]
     index_to_move = dir_list.index(element_to_move)
     element_to_move = dir_list.pop(index_to_move)
     dir_list.insert(0, element_to_move)
