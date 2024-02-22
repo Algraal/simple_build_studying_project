@@ -1,4 +1,2 @@
-Bug to be fixed
-For now programs does not work as they should, CreateCmake creates list of 
-src/h files in project directory, but only filenames without a proper path,
-that is way BuildProject cannot build project - cmake cannot find files.
+All code should be refactored someway, I have no idea yet. Binary of built
+should be moved to binary directory.
