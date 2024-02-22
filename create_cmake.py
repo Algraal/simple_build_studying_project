@@ -35,14 +35,13 @@ def main() -> bool:
         raw_dir_list = create_list_of_files()
     else:
         raw_dir_list = os.listdir()
-    print(raw_dir_list)
     # Seeks for main source file
     language_extensions = []
     if any(file.endswith("main.cpp") for file in raw_dir_list):
-        language_extensions = [".cpp", ".h"]
+        language_extensions = [".cpp"]
     if any(file.endswith("main.c") for file in raw_dir_list):
         if not language_extensions:
-            language_extensions = [".c", ".h"]
+            language_extensions = [".c"]
         else:
             print("Error: both main.cpp and main.c are in the project.")
             return False
@@ -80,6 +79,7 @@ def main() -> bool:
     project_name = input("Enter project: ")
     content = f'cmake_minimum_required(VERSION 3.27)\nproject({project_name})\n'
     content += 'set(CMAKE_CXX_STANDARD 11)\n'
+    content += f'include_directories({os.path.join(os.getcwd(), "include")})\n'
     content += f'add_executable({project_name} {file_list}\n)'
     filehandler.write(content)
     filehandler.close() 
