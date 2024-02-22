@@ -74,6 +74,7 @@ def main() -> bool:
     filehandler.write(content)
     filehandler.close() 
     os.chmod("CMakeLists.txt", 0o600)
+    print("CMakeLists.txt is created successfully.")
     return True
 
 if __name__ == '__main__':
