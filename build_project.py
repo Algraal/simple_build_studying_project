@@ -67,11 +67,31 @@ def run_cmake() -> bool:
     except subprocess.CalledProcessError as e:
         print(f'Error running Cmake: {e}')
         return False
-    
+
+# Moves to root directory of a project, for now directory with src
+# is considered root directory
+def move_to_root() -> bool:
+    current_dir_files = os.listdir()
+    previous_dir_files = os.listdir("../")
+    if "src" in current_dir_files:
+        return True
+    elif "src" in previous_dir_files:
+        try:
+            os.chdir("..")
+            return True
+        except Exception as e:
+            print("Error moving to root dir: {e}")
+            return False
+    else:
+        return False
+
 def main(option: str) -> bool:
     # user inputs what kind of build they need
     if option != 'run' and option != 'build':
         print('Undefined option. Aborting...')
+        return False
+    if not move_to_root():
+        print("Unable to find root directory. Aborting...")
         return False
     build_reg = ''
     while True:

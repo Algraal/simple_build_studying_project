@@ -21,32 +21,34 @@ def is_inside_dir(ending: str) -> bool:
             return False
     return True
 
-def create_list_of_executables() -> List[str]:
+def create_list_of_files() -> List[str]:
     # Script moves to root directory
     raw_dir_list = []
     os.chdir("../")
     for directory_name in POSSIBLE_DIRECTORIES_FOR_SOURCES:
         if os.path.exists(directory_name) and os.path.isdir(directory_name):
-            raw_dir_list += os.listdir(directory_name)
+            raw_dir_list += [os.path.join(os.getcwd(), directory_name, file) for file in  os.listdir(directory_name)]
     return raw_dir_list
 def main() -> bool:
     raw_dir_list = []
     if is_inside_dir("src"):
-        raw_dir_list = create_list_of_executables()
+        raw_dir_list = create_list_of_files()
     else:
         raw_dir_list = os.listdir()
-    if not ('main.cpp' in raw_dir_list or 'main.c' in raw_dir_list):
-        print('Error: main.cpp/main.c is not found')
+    print(raw_dir_list)
+    # Seeks for main source file
+    language_extensions = []
+    if any(file.endswith("main.cpp") for file in raw_dir_list):
+        language_extensions = [".cpp", ".h"]
+    if any(file.endswith("main.c") for file in raw_dir_list):
+        if not language_extensions:
+            language_extensions = [".c", ".h"]
+        else:
+            print("Error: both main.cpp and main.c are in the project.")
+            return False
+    if not language_extensions:
+        print("Error: main.cpp/main.c was not found.")
         return False
-    elif 'main.cpp' in raw_dir_list and 'main.c' in raw_dir_list:
-        print("Error: both main.cpp and main.c are in the directory")
-        return False
-    elif 'main.cpp' in raw_dir_list:
-        # possible extensions for cpp sources/headers
-        language_extensions = ['.cpp', '.h']
-    elif 'main.c' in raw_dir_list:
-        language_extensions = ['.c', '.h']
-    
     # deletes non executables files
     dir_list = []
     for file in raw_dir_list:
@@ -61,7 +63,15 @@ def main() -> bool:
         return False
     # puts main.cpp in the begining, joins list into string
     element_to_move = 'main' + language_extensions[0]
-    index_to_move = dir_list.index(element_to_move)
+    # looks for main source file with passed extension
+    element_to_move = [file for file in dir_list if file.endswith(element_to_move)]
+    # Previous step turned element_to_move into list, if list has != 1 element
+    # it means project has few main sources or zero 
+    if len(element_to_move) != 1:
+        print(f"Error: too many instances of {'main' + language_extensions[0]}")
+        return False
+    # As there are only one elemnt in list it is possible to pass the first el 
+    index_to_move = dir_list.index(element_to_move[0])
     element_to_move = dir_list.pop(index_to_move)
     dir_list.insert(0, element_to_move)
     file_list = '\n\t'.join(dir_list)
