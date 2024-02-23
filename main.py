@@ -3,25 +3,28 @@ from typing import Type
 
 class Main:
     def __init__(self) -> None:
-        project_to_build = Project()
-        Main.build_using_cmake(project_to_build)
-        return None
+        try:
+            project_to_build = Project()
+            Main.build_using_cmake(project_to_build)
+        except Exception as e:
+            raise ValueError(f"Failed building using cmake: {e}")
     @staticmethod
-    def build_using_cmake(project_to_build: Type[Project]) -> bool:
-        while True:
-            build_dir = input("Enter: 'build', 'debug', or "\
-                              "'exit' (to cancel): ")
-            if build_dir == 'build':
-                break
-            elif build_dir == 'debug':
-                break
-            elif build_dir == 'exit':
+    def build_using_cmake(project_to_build: Type[Project]) -> None:
+        try:
+            while True:
+                build_dir = input("Enter: 'build', 'debug', or "\
+                                  "'exit' (to cancel): ")
+                if build_dir in ['build', 'debug', 'exit']:
+                    break
+            if build_dir == 'exit':
                 print("Building was canceled. Aborting...")
-                return True
-        if not project_to_build.create_build_directory(build_dir):
-            return False
-        return True
-
+            elif not project_to_build.create_build_directory(build_dir):
+                raise ValueError("Error: cannot create build directory.")
+        except Exception as e:
+            raise ValueError(f"Error in build_using_cmake: {e}")
 if __name__ == "__main__":
-    app = Main()
+    try:
+        app = Main()
+    except Exception as e:
+        print(f"Error initializing the application: {e}")
 
