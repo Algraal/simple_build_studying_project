@@ -1,2 +1,1 @@
-All code should be refactored someway, I have no idea yet. Binary of built
-should be moved to binary directory.
+Should implement building and running. MB insert other scripts into same main.
