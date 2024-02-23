@@ -11,14 +11,16 @@ def do_make() -> bool:
     try:
         subprocess.run(['cmake', '--build', '.'], check=True)
         print("Make completed successfully.")
+        executable_name = find_executable_name()
+        if executable_name == "":
+            print(f"Executable does not exist")
+            return False
+        shutil.move(executable_name, "../bin")
         return True
     except subprocess.CalledProcessError as e:
         print(f'Error running make {e}')
         return False
-# runs execuatble in the same directory if it has the same name as defined in
-# CMakeList.txt located in parent directory. Returns false if CMakeLists.txt
-# does not exist, cannot be opened, does not have project name 
-def run_build() -> bool:
+def find_executable_name() -> str:
     try:
         filehandler = open('../CMakeLists.txt', 'r', encoding='utf-8')
         content = filehandler.read()
@@ -27,23 +29,34 @@ def run_build() -> bool:
 
         if not match:
             print("Error: Could not get project name. Aborting...")
-            return False 
+            return False
 
         executable_name = match.group(1)
-        
         # Check if the executable exists
         if not is_file_exists(executable_name):
-            print(f"Error: Executable '{executable_name}' does not exist")
-            return False
-        
-        print(f"Program {executable_name} started.")
-        completed_process = subprocess.run(f'./{executable_name}', check=True)
-        return True
-
+            print(f"Error: Executable does not exist")
+            return ""
+        else:
+            return executable_name
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error. Binary was not found: {e}")
+        return ""
+        
+# runs execuatble in the same directory if it has the same name as defined in
+# CMakeList.txt located in parent directory. Returns false if CMakeLists.txt
+# does not exist, cannot be opened, does not have project name 
+def run_build() -> bool:
+    executable_name = find_executable_name()
+    move_to_root()
+    if executable_name == "":
+        print(f"Executable does not exist.")
         return False
-
+    try:
+        print(f"Program {executable_name} started")
+        completed_process = subprocess.run(f'bin/{executable_name}', check=True)
+        return True
+    except Exception as e:
+        print(f"Program failed to start: {e}. Aborting...")
 def remove_directory(directory_path: str) -> bool:
     try:
         shutil.rmtree(directory_path)
@@ -115,7 +128,11 @@ def main(option: str) -> bool:
             return False
     # makes dir for new build and moves over there
     os.mkdir(build_reg)
-    os.chdir(build_reg)
+    try:
+        os.chdir(build_reg)
+    except Exception as e:
+        print(f"Error cannot enter {build_reg}: {e}")
+        return False
     print(os.getcwd())
     
     # tries to build project

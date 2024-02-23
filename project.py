@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import sys
 import re
+from utility import is_directory, remove_directory
 
 # Class that has methods and properties to handle building project
 class Project:
@@ -41,6 +42,24 @@ class Project:
         print(self.__root_directory, self.__current_location,
               self.__project_name, self.__executable_name)
         return None
+    # Creates build directory, if exists removes it completly and creates
+    # another one
+    def create_build_directory(self, dir_build) -> bool:
+        if self.__current_location != self.__root_directory:
+            if self.move_to_directory(self.__root_directory):
+                return False
+        # Absolute path to expected directory for build
+        path_to_dir_build = os.path.abspath(os.path.join(os.getcwd(), dir_build))
+        if is_directory(path_to_dir_build):
+            if not remove_directory(path_to_dir_build):
+                return False
+        try:
+            os.mkdir(path_to_dir_build)
+            return True
+        except Exception as e:
+            print(f"Error: creating {dir_build} directory {e}.")
+            return False
+
     # Looks in CMakeLists.txt using provided pattern
     def find_in_cmake(self, pattern: str) -> str:
         try:
@@ -65,7 +84,7 @@ class Project:
     def check_if_root_directory(self, directory_path) -> bool:
         try:
             directory_path = os.path.abspath(directory_path)
-            if not self.is_directory(directory_path):
+            if not is_directory(directory_path):
                 self.__root_directory = ""
                 return False
             files = os.listdir(directory_path)
@@ -115,7 +134,7 @@ class Project:
     def move_to_directory(self, directory_name: str) -> bool:
         directory_name = os.path.abspath(directory_name)
         try:
-            if self.is_directory(directory_name):
+            if is_directory(directory_name):
                 os.chdir(directory_name)
                 self.__current_location = os.path.abspath(os.getcwd())
                 return True
@@ -123,13 +142,5 @@ class Project:
                 print(f"Error move_to_directory: {directory_name} is not a directory")
                 return False
         except Exception as e:
-            print("Error move_to_directory: {e}")
+            print(f"Error move_to_directory: {e}")
         return False
-
-    # Checks if passed string is a directory, returns True on success
-    @classmethod
-    def is_directory(cls, directory_name: str) -> bool:
-        directory_name = os.path.abspath(directory_name)
-        return os.path.exists(directory_name) and os.path.isdir(directory_name)
-
-
