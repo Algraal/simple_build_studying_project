@@ -11,6 +11,7 @@ class Project:
     __project_name: str
     __current_location: str
     __root_directory: str
+    __build_directory: str
     # Directory with this const variable is considered root
     PROJECT_ROOT_FILE = "CMakeLists.txt"
     PATTERN_PROJECT_NAME = r"add_executable\((\w+)"
@@ -23,6 +24,7 @@ class Project:
             self.__project_name = ""
             self.__current_location = os.path.abspath(os.getcwd())
             self.__root_directory = ""
+            self.__build_directory = ""
             user_path = input("Enter path to a project`s root directory, "\
                              "enter empty string for auto-search: ")
             if user_path == "":
@@ -34,7 +36,8 @@ class Project:
                 self.move_to_directory(self.__root_directory)
 
             self.__project_name = self.find_in_cmake(self.PATTERN_PROJECT_NAME)
-            self.__executable_name = self.find_in_cmake(self.PATTERN_EXECUTABLE_NAME)
+            self.__executable_name = \
+                self.find_in_cmake(self.PATTERN_EXECUTABLE_NAME)
 
             if not self.__executable_name or not self.__project_name:
                 raise ValueError("Project name or executable name not found.")
@@ -56,6 +59,7 @@ class Project:
             if is_directory(path_to_dir_build):
                 remove_directory(path_to_dir_build):
             os.mkdir(path_to_dir_build)
+            self.__build_directory = path_to_dir_build
             return True
         except Exception as e:
             raise ValueError(f"Error: creating {dir_build} directory {e}")
@@ -134,3 +138,9 @@ class Project:
                 raise ValueError(f"Error: {directory_name} is not a directory.")
         except Exception as e:
             raise ValueError(f"Error in move_to_directory: {e}")
+    # Runs cmake to get Makefile done
+    def run_cmake(self) -> None:
+        try:
+            if self.__current_location != self.__root_directory:
+                self.move_to_directory(self.__root_directory)
+
