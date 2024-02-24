@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import sys
 import re
-from utility import is_directory, remove_directory
+from utility import is_directory, is_file, remove_directory
 
 # Class that has methods and properties to handle building project
 class Project:
@@ -14,8 +14,8 @@ class Project:
     __build_directory: str
     # Directory with this const variable is considered root
     PROJECT_ROOT_FILE = "CMakeLists.txt"
-    PATTERN_PROJECT_NAME = r"add_executable\((\w+)"
-    PATTERN_EXECUTABLE_NAME = r"project\s*\(\s*([^\s]+)"
+    PATTERN_PROJECT_NAME = re.compile(r"add_executable\((\w+)\s")
+    PATTERN_EXECUTABLE_NAME = re.compile(r'add_executable\((\w+)')
 
     def __init__(self) -> None:
         try:
@@ -50,17 +50,16 @@ class Project:
             raise ValueError(f"Error during project initialization: {e}")
     # Creates build directory, if exists removes it completly and creates
     # another one
-    def create_build_directory(self, dir_build) -> bool:
+    def create_build_directory(self, dir_build) -> None:
         try:
             if self.__current_location != self.__root_directory:
                 self.move_to_directory(self.__root_directory)
             # Absolute path to expected directory for build
             path_to_dir_build = os.path.join(self.__current_location, dir_build)
             if is_directory(path_to_dir_build):
-                remove_directory(path_to_dir_build):
+                remove_directory(path_to_dir_build)
             os.mkdir(path_to_dir_build)
             self.__build_directory = path_to_dir_build
-            return True
         except Exception as e:
             raise ValueError(f"Error: creating {dir_build} directory {e}")
 
@@ -141,6 +140,27 @@ class Project:
     # Runs cmake to get Makefile done
     def run_cmake(self) -> None:
         try:
-            if self.__current_location != self.__root_directory:
-                self.move_to_directory(self.__root_directory)
-
+            if self.__current_location != self.__build_directory:
+                self.move_to_directory(self.__build_directory)
+            subprocess.run(['cmake', '..'], check=True)
+            print(f"Cmake configuration in {self.__build_directory} "\
+                  "is completed.")
+            self.move_to_directory(self.__root_directory)
+        except Exception as e:
+            raise ValueError(f"Error in run_cmake: {e}")
+    # Builds using Makefile 
+    def complete_building(self) -> None:
+        try:
+            if self.__current_location != self.__build_directory:
+                self.move_to_directory(self.__build_directory)
+            subprocess.run(['cmake', '--build', '.'], check=True)
+            # Creates path to expected old executable to remove it before
+            # moving new executable to that directory
+            path_to_executable = os.path.join(self.__root_directory, "bin",\
+                                    self.__executable_name)
+            if is_file(path_to_executable):
+                os.remove(path_to_executable)
+            shutil.move(self.__executable_name, path_to_executable)
+            self.move_to_directory(self.__root_directory)
+        except Exception as e:
+            raise ValueError(f"Error in complete_building: {e}")

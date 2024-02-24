@@ -18,8 +18,10 @@ class Main:
                     break
             if build_dir == 'exit':
                 print("Building was canceled. Aborting...")
-            elif not project_to_build.create_build_directory(build_dir):
-                raise ValueError("Error: cannot create build directory.")
+            else:
+                project_to_build.create_build_directory(build_dir)
+            project_to_build.run_cmake()
+            project_to_build.complete_building()
         except Exception as e:
             raise ValueError(f"Error in build_using_cmake: {e}")
 if __name__ == "__main__":
