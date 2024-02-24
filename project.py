@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import sys
 import re
+from typing import List
 from utility import is_directory, is_file, remove_directory
 
 # Class that has methods and properties to handle building project
@@ -33,6 +34,9 @@ class Project:
                 self.check_if_root_directory(user_path)
 
             if not self.__root_directory:
+                raise ValueError(f"Error: could not find root directory.")
+
+            if self.__root_directory != self.__current_location:
                 self.move_to_directory(self.__root_directory)
 
             self.__project_name = self.find_in_cmake(self.PATTERN_PROJECT_NAME)
@@ -164,3 +168,20 @@ class Project:
             self.move_to_directory(self.__root_directory)
         except Exception as e:
             raise ValueError(f"Error in complete_building: {e}")
+    # Runs built program in bin directory
+    def run_build(self, args: List[str] = []) -> None:
+        try:
+            if self.__current_location != self.__root_directory:
+                self.move_to_directory(self.__root_directory)
+            path_to_executable = os.path.abspath( \
+                    os.path.join(self.__root_directory, 'bin', \
+                            self.__executable_name))
+            if is_file(path_to_executable):
+                print(f"Program {self.__executable_name} is started.")
+                # Creates list what will be passed to execve call
+                path_args_list = [path_to_executable] + args
+                subprocess.run(path_args_list, check = True)
+            else:
+                raise ValueError("Error: executable file does not exist")
+        except Exception as e:
+            raise ValueError(f"Error in run_build: {e}")
