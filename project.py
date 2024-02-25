@@ -166,6 +166,9 @@ class Project:
                 os.remove(path_to_executable)
             shutil.move(self.__executable_name, path_to_executable)
             self.move_to_directory(self.__root_directory)
+            # Symblink to compiler datebase for clangd autocomplete
+            subprocess.run(["ln", "-s", os.path.join(self.__build_directory, \
+                            "compile_commands.json"), "compile_commands.json"])
         except Exception as e:
             raise ValueError(f"Error in complete_building: {e}")
     # Runs built program in bin directory
