@@ -16,10 +16,6 @@ class Main:
     __options: List[Option]
 
     def __init__(self, options: List[Option]) -> None:
-
-        super().__init__(
-                Option("br", self.build_and_run_using_cmake)
-                )
         self.__options = options
         self.run_options()
         return None
@@ -81,6 +77,12 @@ class Main:
 
 if __name__ == "__main__":
     try:
-        app = Main()
+        options = [
+            # br for build and run
+            Option("br", Main.build_and_run_using_cmake),
+            # gc for generate cmake
+            Option("gc", Main.create_cmake_option)
+            ]
+        app = Main(options)
     except Exception as e:
         print(f"Error initializing the application: {e}")
