@@ -120,6 +120,7 @@ class CmakeGenerator:
             filehandler = open("CMakeLists.txt", "w", encoding="utf-8")
             filehandler.write(self.__cmake_content)
             filehandler.close()
+            return True
         except Exception as e:
             print(f'Error: {e}')
             return False
