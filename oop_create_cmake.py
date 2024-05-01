@@ -4,6 +4,26 @@ from utility import move_to_dir, find_index_with_substring, is_directory
 
 
 class CmakeGenerator:
+    """
+    A class to generate CMakeLists.txt for a C++ project based on the project's
+    source files.
+
+    Attributes:
+        C_STANDARD (str): Default C standard for the project.
+            CXX_STANDARD (str): Default C++ standard for the project.
+        POSSIBLE_MAIN_SOURCES (Dict[str, Tuple[str]]): Dictionary mapping main
+            source file names to their extensions and standards.
+        __raw_src_list (List[str]): List to store raw source files from the
+            'src' directory.
+        __language_extensions (List[str]): List to store language extensions
+            of the project.
+        __language_standards (List[str]): List to store language standards
+            of the project.
+        __src_list (List[str]): List to store proper source files
+            of the project.
+        __cmake_content (str): String to store the content of the
+            CMakeLists.txt file.
+    """
     # Default standards for c++ and c
     C_STANDARD: str = ("set(CMAKE_C_STANDARD_REQUIRED ON)\n"
                        "set(CMAKE_C_STANDARD 99)\n")
@@ -29,8 +49,8 @@ class CmakeGenerator:
     # compiling/setting up programm.
     def list_files(self) -> None:
         """
-        Fetches all files in current directory. Stores them to the private property
-        __raw_src_list.
+        Fetches all files in current directory. Stores them to the private
+        property __raw_src_list.
 
         Returns:
             None: empty __raw_src_list is not an error but a case that should
@@ -117,6 +137,14 @@ class CmakeGenerator:
 
     # Generates CMakeLists.txt
     def generate_cmake(self) -> bool:
+        """
+        Generates the CMakeLists.txt file for the project based on the
+            source files.
+
+        Returns:
+            bool: True if CMakeLists.txt is successfully generated, False
+                    otherwise.
+        """
         if not self.fetch_src_files():
             return False
         if not self.create_src_list():
@@ -125,7 +153,7 @@ class CmakeGenerator:
         try:
             # Moves to the project root directory from src
             print("before")
-            os.chdir(os.pardir)
+            os.chdir(os.path.pardir)
             print("after")
             self.fill_content()
             filehandler = open("CMakeLists.txt", "w", encoding="utf-8")
@@ -139,7 +167,12 @@ class CmakeGenerator:
     # Fills content string used for initializing CMakeLists.txt using values
     # from private properties of CmakeGenerator instance
     def fill_content(self) -> None:
+        """
+        Fills the __cmake_content string with project-related Cmake commands.
 
+        Returns:
+            None
+        """
         src_string: str = '\n\t'.join(self.__src_list)
         # Do not need anymore
         self.__src_list.clear()
