@@ -23,22 +23,26 @@ class CmakeGenerator:
     __language_extensions: List[str] = []
     __language_standards: List[str] = []
     __src_list: List[str] = []
-    __cmake_content: str = "" 
+    __cmake_content: str = ""
 
     # Creates list of files in a directory that can be used for
     # compiling/setting up programm.
     def list_files(self) -> None:
         """
-        Fetches all files in src directory. Stores them to the private property
+        Fetches all files in current directory. Stores them to the private property
         __raw_src_list.
 
         Returns:
             None: empty __raw_src_list is not an error but a case that should
                 be handled.
         """
-        self.__raw_src_list += [os.path.join(os.getcwd(), file) for file in
-                                os.listdir()]
-        return None
+        try:
+            dir_name: str = os.path.basename(os.getcwd())
+            print(dir_name)
+            self.__raw_src_list += [os.path.join(dir_name, file) for file in
+                                    os.listdir()]
+        except OSError as e:
+            raise e
 
     def fetch_src_files(self) -> bool:
         """
@@ -120,7 +124,6 @@ class CmakeGenerator:
 
         try:
             # Moves to the project root directory from src
-            
             print("before")
             os.chdir(os.pardir)
             print("after")
@@ -156,7 +159,7 @@ class CmakeGenerator:
         # "${CMAKE_SOURCE_SIR}/src/*.cpp". If sources are listed explicitly
         # is it easier to exclude sources that should
         # not be used in compilation
-        self.__cmake_content += (f'add_executable({project_name}'
+        self.__cmake_content += (f'add_executable({project_name} '
                                  f'{src_string}\n)\n')
         try:
             # Include "include" directory if it exists
