@@ -1,5 +1,6 @@
 import os
 from typing import List
+import subprocess
 
 # Directories that may have executables
 POSSIBLE_DIRECTORIES_FOR_SOURCES  = ("include", "config", "lib", "src")
@@ -79,12 +80,14 @@ def main() -> bool:
     project_name = input("Enter project: ")
     content = f'cmake_minimum_required(VERSION 3.27)\nproject({project_name})\n'
     content += 'set(CMAKE_CXX_STANDARD 11)\n'
+    content += 'set(CMAKE_EXPORT_COMPILE_COMMANDS ON)\n'
     content += f'include_directories({os.path.join(os.getcwd(), "include")})\n'
     content += f'add_executable({project_name} {file_list}\n)'
     filehandler.write(content)
     filehandler.close() 
     os.chmod("CMakeLists.txt", 0o600)
     print("CMakeLists.txt is created successfully.")
+    subprocess.run(["cp", "/home/alga/vim-build-auto/templates/.clang-format", "."], check=True)
     return True
 
 if __name__ == '__main__':
