@@ -1,9 +1,6 @@
 import os
-from typing import List
-from typing import Dict
-import subprocess
-from utility import move_to_dir
-from utility import find_index_with_substring
+from typing import List, Dict
+from utility import move_to_dir, find_index_with_substring, is_directory
 
 
 class CmakeGenerator:
@@ -31,22 +28,41 @@ class CmakeGenerator:
     # Creates list of files in a directory that can be used for
     # compiling/setting up programm.
     def list_files(self) -> None:
-        # Fetches all files in src directory. If some files are not supposed
-        # to be used in compilation they should be manually excluded from
-        # "CMakeLists.txt".
+        """
+        Fetches all files in src directory. Stores them to the private property
+        __raw_src_list.
+
+        Returns:
+            None: empty __raw_src_list is not an error but a case that should
+                be handled.
+        """
         self.__raw_src_list += [os.path.join(os.getcwd(), file) for file in
                                 os.listdir()]
         return None
-    
-    # Picks up sources from the src directory with the same extension as the
-    # main source file has. Returns True and appends proper sources to the 
-    # private filed __src_list if there is only one main src file, otherwise
-    # __src_list will be empty and False will be returned
+
     def fetch_src_files(self) -> bool:
-        if move_to_dir("src"):
-            # Successfully moved to src directory
-            self.list_files()
-        else:
+        """
+        Fetches source files from the 'src' directory matching the extension of
+        the main source file.
+
+        Returns:
+            bool: True if source files are fetched successfully,
+                False otherwise.
+        """
+        try:
+            if move_to_dir("src"):
+                # Successfully moved to src directory
+                self.list_files()
+            else:
+                return False
+        except OSError as e:
+            print(f"Error fetch_src_files: {e}")
+            return False
+        except ValueError as e:
+            print(f"Error fetch_src_files: {e}")
+            return False
+        except TypeError as e:
+            print(f"Error fetch_src_files: {e}")
             return False
 
         # Looks for main src from directory src in predefined Dict to find out
@@ -65,7 +81,17 @@ class CmakeGenerator:
         if len(self.__language_extensions) > 1:
             print("Few main sources were found.")
             return False
-        # Create new list of sources with the same extension
+        return True
+
+    def create_src_list(self) -> bool:
+        """
+        Appends the proper sources to the private field '__src_list' and
+        returns True. If multiple or no main
+        source files are found, returns False and does not modify '__src_list'.
+
+        Returns:
+            bool: True if proper list of sources is created, otherwise False.
+        """
         for file in self.__raw_src_list:
             if file.endswith(self.__language_extensions[0]):
                 self.__src_list.append(file)
@@ -78,45 +104,64 @@ class CmakeGenerator:
                                                    element_to_move)
         # Impossible case
         if src_index is None:
-            return False    
+            return False
         element_to_move = self.__src_list.pop(src_index)
         self.__src_list.insert(0, element_to_move)
         return True
 
     # Generates CMakeLists.txt
     def generate_cmake(self) -> bool:
+        if not self.fetch_src_files():
+            return False
+        if not self.create_src_list():
+            return False
+
         try:
             filehandler = open("CMakeLists.txt", "w", encoding="utf-8")
+            filehandler.write(self.__cmake_content)
+            filehandler.close()
         except Exception as e:
             print(f'Error: {e}')
-            return False        
-        filehandler.close()
+            return False
 
-    # Fills content string used for initializing CMakeLists.txt using values 
+    # Fills content string used for initializing CMakeLists.txt using values
     # from private properties of CmakeGenerator instance
     def fill_content(self) -> bool:
-        # At that moment process is located in "src" directory of the project
-        # But CmakeLists.txt should be located inside of the project root
-        # directory
-        try os.chdir('')
-
 
         src_string: str = '\n\t'.join(self.__src_list)
         # Do not need anymore
         self.__src_list.clear()
-        # Prompts for project name (MB should be reimplemented to get project 
+        # Prompts for project name (MB should be reimplemented to get project
         # name from args)
         project_name: str = input("Enter project name: ")
-
         self.__cmake_content = 'cmake_minimum_required(VERSION 3.27)\n'
-        self.__cmake_content += f'project ({project_name})\n'
-        
+        self.__cmake_content += f'project({project_name})\n'
+
         # Sets default standard based on __language_extensions
         self.__cmake_content += self.__language_standards[0]
         # Turns on option to create compile_commands.txt for clangd
         self.__cmake_content += 'set(CMAKE_EXPORT_COMPILE_COMMANDS ON)\n'
         # Adds precompiler definitions
         self.__cmake_content += 'add_definitions(-DSOME_DEFINITION)\n'
-        self.__cmake_content += f'include_directories({os.path.join(os.getcwd(), "include")})\n'
-        content += f'add_executable({project_name} {file_list}\n)'
-        self.__cmake_content 
+        # I think it is better to directly list all source files than use
+        # "${CMAKE_SOURCE_SIR}/src/*.cpp". If sources are listed explicitly
+        # is it easier to exclude sources that should
+        # not be used in compilation
+        self.__cmake_content += (f'add_executable({project_name}'
+                                 f'{src_string}\n)')
+
+        # At that moment process is located in "src" directory of the project
+        # But CmakeLists.txt should be located inside of the project root
+        # directory
+        try:
+            os.chdir(os.path.pardir())
+            # Include "include" directory if it exists
+            if is_directory(os.path.join(os.getcwd(), "include")):
+                self.__cmake_content += ("target_include_directories("
+                                         f"{project_name}")
+                self.__cmake_content += ("PUBLIC \"{CMAKE_SOURCE_DIR}/"
+                                         "include\")\n")
+        except OSError as e:
+            print(f"Error fill_content: {e}")
+        finally:
+            return True
