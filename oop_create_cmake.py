@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from utility import move_to_dir, find_index_with_substring, is_directory
 
 
@@ -11,19 +11,19 @@ class CmakeGenerator:
                          "set(CMAKE_CXX_STANDARD 17)\n")
     # Expected that all sources of a project have the same extension as the
     # main source file
-    POSSIBLE_MAIN_SOURCES: Dict[str, List[str]] = {
-            "main.cpp": [".cpp", CXX_STANDARD],
-            "main.cxx": [".cxx", CXX_STANDARD],
-            "main.CPP": [".CPP", CXX_STANDARD],
-            "main.c++": [".c++", CXX_STANDARD],
-            "main.c": [".c", C_STANDARD]
+    POSSIBLE_MAIN_SOURCES: Dict[str, Tuple[str]] = {
+            "main.cpp": (".cpp", CXX_STANDARD),
+            "main.cxx": (".cxx", CXX_STANDARD),
+            "main.CPP": (".CPP", CXX_STANDARD),
+            "main.c++": (".c++", CXX_STANDARD),
+            "main.c": (".c", C_STANDARD)
             }
     # Stores all files from src directory
     __raw_src_list: List[str] = []
-    __language_extensions: List[str] = None
-    __language_standards: List[str] = None
+    __language_extensions: List[str] = []
+    __language_standards: List[str] = []
     __src_list: List[str] = []
-    __cmake_content: str = None
+    __cmake_content: str = "" 
 
     # Creates list of files in a directory that can be used for
     # compiling/setting up programm.
@@ -69,7 +69,9 @@ class CmakeGenerator:
         # extenson of file in the project
         for filename in self.__raw_src_list:
             for possible_src, extension in self.POSSIBLE_MAIN_SOURCES.items():
-                if filename.endswith("/" + possible_src):
+                # Tail in this conext will be file name
+                file_tail: str = os.path.split(filename)[1]
+                if file_tail == possible_src:
                     # 0th element is a extension, 1th standard
                     self.__language_extensions.append(extension[0])
                     self.__language_standards.append(extension[1])
