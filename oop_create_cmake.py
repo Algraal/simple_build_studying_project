@@ -119,6 +119,12 @@ class CmakeGenerator:
             return False
 
         try:
+            # Moves to the project root directory from src
+            
+            print("before")
+            os.chdir(os.pardir)
+            print("after")
+            self.fill_content()
             filehandler = open("CMakeLists.txt", "w", encoding="utf-8")
             filehandler.write(self.__cmake_content)
             filehandler.close()
@@ -129,7 +135,7 @@ class CmakeGenerator:
 
     # Fills content string used for initializing CMakeLists.txt using values
     # from private properties of CmakeGenerator instance
-    def fill_content(self) -> bool:
+    def fill_content(self) -> None:
 
         src_string: str = '\n\t'.join(self.__src_list)
         # Do not need anymore
@@ -151,20 +157,13 @@ class CmakeGenerator:
         # is it easier to exclude sources that should
         # not be used in compilation
         self.__cmake_content += (f'add_executable({project_name}'
-                                 f'{src_string}\n)')
-
-        # At that moment process is located in "src" directory of the project
-        # But CmakeLists.txt should be located inside of the project root
-        # directory
+                                 f'{src_string}\n)\n')
         try:
-            os.chdir(os.path.pardir())
             # Include "include" directory if it exists
             if is_directory(os.path.join(os.getcwd(), "include")):
-                self.__cmake_content += ("target_include_directories("
-                                         f"{project_name}")
-                self.__cmake_content += ("PUBLIC \"{CMAKE_SOURCE_DIR}/"
-                                         "include\")\n")
+                self.__cmake_content += f"target_include_directories({project_name} "
+                self.__cmake_content += "PUBLIC \"{CMAKE_SOURCE_DIR}/include\")\n"
+            else:
+                print("Include directory was not found.")
         except OSError as e:
             print(f"Error fill_content: {e}")
-        finally:
-            return True
