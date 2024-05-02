@@ -57,10 +57,9 @@ def remove_directory(directory_name: str) -> bool:
         if not is_directory(directory_path):
             return False
         shutil.rmtree(directory_path)
-        print("Previous build was removed.")
         return True
     except OSError as e:
-        print(f"Error remove_directory: {e}")
+        print(f"Error remove_directory: {e}", file=sys.stderr)
         raise e
 
 
