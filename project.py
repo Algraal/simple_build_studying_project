@@ -7,8 +7,23 @@ from typing import List, Type
 from utility import is_directory, is_file, remove_directory
 
 
-# Class that has methods and properties to handle building project
 class Project:
+    """
+    A class to handle building and running a C++ project using CMake.
+
+    Attributes:
+        __executable_name (str): Name of the executable.
+        __project_name (str): Name of the project.
+        __current_location (str): Current directory location.
+        __root_directory (str): Root directory of the project.
+        __build_directory (str): Build directory path.
+        __userpath (str): User provided path.
+        PROJECT_ROOT_FILE (str): Name of the CMakeLists.txt file.
+        PATTERN_PROJECT_NAME (re.Pattern): Regular expression pattern to find
+            project name in CMakeLists.txt.
+        PATTERN_EXECUTABLE_NAME (re.Pattern): Regular expression pattern to
+            find executable name in CMakeLists.txt.
+    """
     __executable_name: str
     __project_name: str
     __current_location: str
@@ -35,7 +50,8 @@ class Project:
                 self.check_if_root_directory(self.__user_path)
 
             if not self.__root_directory:
-                raise ValueError("Error: could not find root directory.")
+                print("Error: could not find root directory.", file=sys.stderr)
+                sys.exit(0)
 
             if self.__root_directory != self.__current_location:
                 self.move_to_directory(self.__root_directory)
@@ -45,18 +61,19 @@ class Project:
                 self.find_in_cmake(self.PATTERN_EXECUTABLE_NAME)
 
             if not self.__executable_name or not self.__project_name:
-                raise ValueError("Project name or executable name not found.")
-
-            print(self.__root_directory, self.__current_location,
-                  self.__project_name, self.__executable_name)
+                sys.exit(0)
             return None
 
         except Exception as e:
             raise ValueError(f"Error during project initialization: {e}")
 
-    # Creates build directory, if exists removes it completly and creates
-    # another one
     def create_build_directory(self, dir_build) -> None:
+        """
+        Creates the build directory for the project.
+
+        Args:
+            dir_build (str): Name of the build directory.
+        """
         try:
             if self.__current_location != self.__root_directory:
                 self.move_to_directory(self.__root_directory)
@@ -70,30 +87,43 @@ class Project:
         except Exception as e:
             raise ValueError(f"Error: creating {dir_build} directory {e}")
 
-    # Looks in CMakeLists.txt using provided pattern
-    def find_in_cmake(self, pattern: str) -> str:
+    def find_in_cmake(self, pattern: str) -> str | None:
+        """
+        Searches for a pattern in CMakeLists.txt file.
+
+        Args:
+            pattern (str): Regular expression pattern.
+
+        Returns:
+            str: Result of the pattern search on success, None otherwise.
+        """
         try:
             if self.__current_location != self.__root_directory:
                 self.move_to_directory(self.__root_directory)
 
-            with open(self.PROJECT_ROOT_FILE, 'r', encoding='utf-8') as filehandler:
+            with open(self.PROJECT_ROOT_FILE, 'r', encoding='utf-8') as \
+                    filehandler:
                 content = filehandler.read()
 
             match = re.search(pattern, content)
 
             if not match:
-                raise ValueError(f"Pattern not found in {self.PROJECT_ROOT_FILE}.")
+                print(f"Pattern not found in {self.PROJECT_ROOT_FILE}.",
+                      file=sys.stderr)
+                return None
 
             search_result = match.group(1)
             return search_result
         except FileNotFoundError:
-            print(f"File {self.__PROJECT_ROOT_FILE} not found. Aborting")
+            print(f"File {self.__PROJECT_ROOT_FILE} not found. Aborting",
+                  file=sys.stderr)
             # Is not a error of script execution
             sys.exit(0)
         except OSError:
             # Permission error, isADirectoryError e.t.c.
-            print(f"OS error occured to open {self.__PROJECT_ROOT_FILE}")
-            sys.exit(0)
+            print(f"OS error occured to open {self.__PROJECT_ROOT_FILE}",
+                  file=sys.stderr)
+            sys.exit(1)
 
     # Checks if provided name is a root directory, sets property
     # __root_directory. Returns True on success, otherwise returns False
@@ -190,7 +220,7 @@ class Project:
             raise ValueError(f"Error in complete_building: {e}")
 
     # Runs built program in bin directory
-    def run_build(self, args: List[str] = []) -> None:
+    def run_build(self, args: List[str] = []) -> int | None:
         try:
             if self.__current_location != self.__root_directory:
                 self.move_to_directory(self.__root_directory)
@@ -198,14 +228,22 @@ class Project:
                     os.path.join(self.__root_directory, 'bin',
                                  self.__executable_name))
             if is_file(path_to_executable):
-                print(f"Program {self.__executable_name} is started.")
                 # Creates list what will be passed to execve call
                 path_args_list = [path_to_executable] + args
-                subprocess.run(path_args_list, check=True)
+                # Starts process, waits until it ends, returns result of prog,
+                # prints output
+                result = subprocess.run(path_args_list)
+
+                str_res: str = (f"{self.__executable_name} finished with: "
+                                f"{result.returncode}.")
+                print("\n" + len(str_res) * "-" + "\n" + str_res)
+                return True
             else:
-                raise ValueError("Error: executable file does not exist")
-        except Exception as e:
-            raise ValueError(f"Error in run_build: {e}")
+                return None
+        except (OSError, FileNotFoundError, subprocess.CalledProcessError) \
+                as e:
+            print(f"Error in run_build: {e}", file=sys.stderr)
+            sys.exit(1)
 
     @staticmethod
     def build_and_run_using_cmake() -> bool:
@@ -230,17 +268,27 @@ class Project:
             return False
 
     @staticmethod
-    def run_with_args() -> None:
-        project_to_build: Type[Project] = Project()
+    def run_with_args() -> bool:
+        """
+        Runs the project with provided arguments. Run_with_args is expected to
+            be started from the root project directory, or its immediate
+            subdirectories.
+            All arguments after sys.arv[1] (option), are considered arguments
+            for program run.
+        Returns:
+            bool: True if program finished successfully, otherwise False.
+
+        """
+        if len(sys.argv) >= 3:
+            arguments: List[str] = sys.argv[2:]
         try:
-            arguments = []
-            print("Enter arguments if neccessary,"
-                  " otherwise enter empty string.")
-            while True:
-                user_input = input("Enter argument: ")
-                if not user_input:
-                    break
-                arguments += user_input
-            project_to_build.run_build(arguments)
+            # If program inside project root directory it looks for executable
+            # in "root/bin"
+            project_to_build: Type[Project] = Project()
+            if project_to_build.run_build(arguments) is None:
+                return False
+            else:
+                return True
         except Exception as e:
-            raise ValueError(f"Error in run_with_args: {e}")
+            print(f"Error in run_with_args: {e}", file=sys.stderr)
+            return False
