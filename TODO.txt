@@ -1,1 +1,26 @@
-Should implement building and running. MB insert other scripts into same main.
+1. Interface methods should be reimplemented. Instead of parsing system 
+arguments inside staticmethods of project classes, these arguments should be
+handled by corresponding interface methods.
+
+2. New option should be added. Creating CMakeLists.txt in temporary location
+to get compile_commands.json for the correct work of the clangd.
+
+3. Exception handling should be reviewed inside methods of all classes.
+
+4. Old tests I written for the program when it was a set of different scripts
+do not work anymore. I should write new test both for methods and for different
+program use cases.
+
+5. create_build_directory in project.py can be rewritten using create_directory
+from utility.py.
+
+6. Interface module can become a base class for to different interface classes:
+InterfaceCLI and InterfaceNVIM. Common stdout, stderr outputs break nvim text
+layout. Some UI of nvim should be used instead.
+
+7. MB I should redirect stderr and stdout of SimpleBuild in a temporary log
+file located in the same directory. Otherwise output of SimpleBuild and 
+executable are mixed together.
+
+8. New option for including autotests (at least simple .sh tests) should be
+added. It requires some common interface for the tests to be included. 

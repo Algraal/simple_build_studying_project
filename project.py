@@ -162,7 +162,7 @@ class Project:
 
             if self.PROJECT_ROOT_FILE in previous_dir_files:
                 self.__root_directory = parent_directory_path
-                return None 
+                return None
             else:
                 print(f"{self.PROJECT_ROOT_FILE} was not found in current or"
                       "parent directory. Aborting")
@@ -172,7 +172,8 @@ class Project:
                   f"find_root_directory: {e}. Aborting")
             return sys.exit(0)
 
-    # Moves to passed directory, changes __curent_position property of an object
+    # Moves to passed directory, changes __curent_position property of an
+    # object.
     # Returns True on Success, otherwise False
     def move_to_directory(self, directory_name: str) -> None:
         try:
@@ -193,13 +194,13 @@ class Project:
             if self.__current_location != self.__build_directory:
                 self.move_to_directory(self.__build_directory)
             subprocess.run(['cmake', '..'], check=True)
-            print(f"Cmake configuration in {self.__build_directory} "\
+            print(f"Cmake configuration in {self.__build_directory} "
                   "is completed.")
             self.move_to_directory(self.__root_directory)
         except Exception as e:
             raise ValueError(f"Error in run_cmake: {e}")
 
-    # Builds using Makefile 
+    # Builds using Makefile
     def complete_building(self) -> None:
         try:
             if self.__current_location != self.__build_directory:
@@ -214,7 +215,7 @@ class Project:
             shutil.move(self.__executable_name, path_to_executable)
             self.move_to_directory(self.__root_directory)
             # Symblink to compiler datebase for clangd autocomplete
-            subprocess.run(["ln", "-s", os.path.join(self.__build_directory, \
+            subprocess.run(["ln", "-s", os.path.join(self.__build_directory,
                             "compile_commands.json"), "compile_commands.json"])
         except Exception as e:
             raise ValueError(f"Error in complete_building: {e}")
@@ -246,14 +247,17 @@ class Project:
             sys.exit(1)
 
     @staticmethod
-    def build_and_run_using_cmake() -> bool:
-
+    def build_using_cmake() -> bool:
+        # ARGUMENTS PARSING LIKE IN RUN WITH ARGS
         if len(sys.argv) < 3 or len(sys.argv) > 4:
             print("Wrong amount arguments for this option were provided.")
             return False
         try:
-            # Third argument is a path to root directory. If there is no third
-            # argument script checks if current or parent directory is a root.
+            # First argument is an option.
+            # Second argument is a name of build directory.
+            # Third argument is a path to the root directory. If there is no
+            # third argument script checks if current or parent
+            # directory is a root.
             if len(sys.argv) == 4:
                 project_to_build: Type[Project] = Project(sys.argv[3])
             else:
@@ -261,10 +265,9 @@ class Project:
             project_to_build.create_build_directory(sys.argv[2])
             project_to_build.run_cmake()
             project_to_build.complete_building()
-            project_to_build.run_build()
             return True
         except Exception as e:
-            print(f"Error in build_and_run_using_cmake: {e}")
+            print(f"Error in build_and_run_using_cmake: {e}", file=sys.stderr)
             return False
 
     @staticmethod

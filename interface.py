@@ -18,10 +18,10 @@ class Interface:
 
     def __init__(self) -> None:
         self.__options = [
-                # br for build and run
-                Option("br", Interface.br_option),
+                # bp for build and run
+                Option("bp", Interface.bp_option),
                 # gc for generate cmake
-                Option("gs", Interface.gc_option),
+                Option("gc", Interface.gc_option),
                 # ra for run with arguments
                 Option("ra", Interface.ra_option),
                 # np for new project
@@ -43,8 +43,8 @@ class Interface:
         return False
 
     # Build and run using cmake
-    def br_option():
-        Project.build_and_run_using_cmake()
+    def bp_option():
+        Project.build_using_cmake()
 
     # Run with arguments
     def ra_option():
