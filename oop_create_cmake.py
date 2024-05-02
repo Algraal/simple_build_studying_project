@@ -1,5 +1,7 @@
 import os
-from typing import List, Dict, Tuple
+import sys
+from typing import List, Dict, Tuple, Type
+
 from utility import move_to_dir, find_index_with_substring, is_directory
 
 
@@ -13,6 +15,7 @@ class CmakeGenerator:
             CXX_STANDARD (str): Default C++ standard for the project.
         POSSIBLE_MAIN_SOURCES (Dict[str, Tuple[str]]): Dictionary mapping main
             source file names to their extensions and standards.
+        __project_name (str): String to store project name.
         __raw_src_list (List[str]): List to store raw source files from the
             'src' directory.
         __language_extensions (List[str]): List to store language extensions
@@ -39,11 +42,16 @@ class CmakeGenerator:
             "main.c": (".c", C_STANDARD)
             }
     # Stores all files from src directory
+    __project_name: str = ""
     __raw_src_list: List[str] = []
     __language_extensions: List[str] = []
     __language_standards: List[str] = []
     __src_list: List[str] = []
     __cmake_content: str = ""
+
+    # Project name is passed in main.py as argument
+    def __init__(self, project_name: str):
+        self.__project_name = project_name
 
     # Creates list of files in a directory that can be used for
     # compiling/setting up programm.
@@ -172,9 +180,8 @@ class CmakeGenerator:
         self.__src_list.clear()
         # Prompts for project name (MB should be reimplemented to get project
         # name from args)
-        project_name: str = input("Enter project name: ")
         self.__cmake_content = 'cmake_minimum_required(VERSION 3.27)\n'
-        self.__cmake_content += f'project({project_name})\n'
+        self.__cmake_content += f'project({self.__project_name})\n'
 
         # Sets default standard based on __language_extensions
         self.__cmake_content += self.__language_standards[0]
@@ -186,14 +193,22 @@ class CmakeGenerator:
         # "${CMAKE_SOURCE_SIR}/src/*.cpp". If sources are listed explicitly
         # is it easier to exclude sources that should
         # not be used in compilation
-        self.__cmake_content += (f'add_executable({project_name} '
+        self.__cmake_content += (f'add_executable({self.__project_name} '
                                  f'{src_string}\n)\n')
         try:
             # Include "include" directory if it exists
             if is_directory(os.path.join(os.getcwd(), "include")):
-                self.__cmake_content += f"target_include_directories({project_name} "
+                self.__cmake_content += f"target_include_directories({self.__project_name} "
                 self.__cmake_content += "PUBLIC \"{CMAKE_SOURCE_DIR}/include\")\n"
             else:
                 print("Include directory was not found.")
         except OSError as e:
             print(f"Error fill_content: {e}")
+
+    @staticmethod
+    def create_cmake_option() -> bool:
+        if (len(sys.argv) != 3):
+            print("Project name was not provided. Enter it as a second arg.")
+            return False
+        CG: Type[CmakeGenerator] = CmakeGenerator(sys.argv[2])
+        return CG.generate_cmake()

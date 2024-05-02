@@ -1,38 +1,24 @@
 import os
 from typing import List
 import subprocess
+from utility import move_to_dir
 
-# Directories that may have executables
+# Directories that may have executables, headers, configs, libs
 POSSIBLE_DIRECTORIES_FOR_SOURCES  = ("include", "config", "lib", "src")
-
-# Functions cheks if it is inside standard c++ project. If true moves/stays to
-# passed directory and return True, otherwise returns False
-def is_inside_dir(ending: str) -> bool:
-    # Script is expected to be started from src/main.cpp or src/main.c
-    if not os.getcwd().endswith(ending):
-        target_path = os.path.join(os.getcwd(), ending)
-        # case we are in a root directory of a project
-        if os.path.exists(target_path) and os.path.isdir(target_path):
-            os.chdir(target_path)
-        # case we are in a nested directory of a project
-        elif os.path.exists("../" + ending) and os.path.isdir("../" + ending):
-            os.chdir("../" + ending)
-        else:
-            print("Error: current directory is not a project. Aborting...")
-            return False
-    return True
-
 def create_list_of_files() -> List[str]:
     # Script moves to root directory
     raw_dir_list = []
     os.chdir("../")
     for directory_name in POSSIBLE_DIRECTORIES_FOR_SOURCES:
         if os.path.exists(directory_name) and os.path.isdir(directory_name):
-            raw_dir_list += [os.path.join(os.getcwd(), directory_name, file) for file in  os.listdir(directory_name)]
+            raw_dir_list += [os.path.join(os.getcwd(), directory_name, file) 
+                             for file in  os.listdir(directory_name)]
     return raw_dir_list
+
+
 def main() -> bool:
     raw_dir_list = []
-    if is_inside_dir("src"):
+    if move_to_dir("src"):
         raw_dir_list = create_list_of_files()
     else:
         raw_dir_list = os.listdir()

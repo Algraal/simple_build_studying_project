@@ -4,6 +4,7 @@ import subprocess
 import sys
 import re
 
+
 # runs make in created directory
 def do_make() -> bool:
     if not is_file_exists('Makefile'):
@@ -20,6 +21,8 @@ def do_make() -> bool:
     except subprocess.CalledProcessError as e:
         print(f'Error running make {e}')
         return False
+
+
 def find_executable_name() -> str:
     try:
         filehandler = open('../CMakeLists.txt', 'r', encoding='utf-8')
@@ -41,7 +44,8 @@ def find_executable_name() -> str:
     except Exception as e:
         print(f"Error. Binary was not found: {e}")
         return ""
-        
+
+
 # runs execuatble in the same directory if it has the same name as defined in
 # CMakeList.txt located in parent directory. Returns false if CMakeLists.txt
 # does not exist, cannot be opened, does not have project name 
@@ -57,6 +61,8 @@ def run_build() -> bool:
         return True
     except Exception as e:
         print(f"Program failed to start: {e}. Aborting...")
+
+# TODO delete
 def remove_directory(directory_path: str) -> bool:
     try:
         shutil.rmtree(directory_path)
