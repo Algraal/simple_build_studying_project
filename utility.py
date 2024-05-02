@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 from typing import List, Tuple
 
@@ -106,7 +107,7 @@ def move_to_dir(ending: str) -> bool:
 
 def find_index_with_substring(str_list: List[str], substr: str) -> int | None:
     """
-    Finds tje index of the first string in the given list that ends with the
+    Finds the index of the first string in the given list that ends with the
     specified substring.
 
     Parameters:
@@ -121,3 +122,34 @@ def find_index_with_substring(str_list: List[str], substr: str) -> int | None:
         if string.endswith(substr):
             return index
     return None
+
+
+# Method that creates directory, returns True if no Exception appears
+@staticmethod
+def create_directory(directory_name: str) -> bool:
+    """
+    Attempts to create directory with provided name. Firstly checks if provided
+    directory already exists.
+
+    Parameters:
+        directory_name (str): Name of the directory.
+
+    Returns:
+        bool: True if directory is created, False otherwise.
+    """
+    # Checks if provided path exists directory
+    try:
+        if not is_directory(directory_name):
+            return False
+    except OSError as e:
+        print(f"Error in create_directory: {e}", file=sys.stderr)
+        return False
+    # Attempts to create dir
+    try:
+        directory_path: str = os.path.abspath(directory_name)
+        os.mkdir(directory_path)
+        return True
+    except OSError as e:
+        print(f"Failed to create_directory {directory_name}: {e}. Aborting...",
+              file=sys.stderr)
+        return False
