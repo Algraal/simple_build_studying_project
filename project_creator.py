@@ -1,20 +1,41 @@
 import os
 import sys
+from typing import Tuple
+
 from utility import remove_directory, create_directory
-# This script creates project directory for c++ project
 
 
 class ProjectCreator:
-    PROJECT_DIRECTORIES = ("include", "bin", "config", "lib", "src", "tests")
+    """
+    A class to create a directory structure for a C++ project.
+
+    Attributes:
+        PROJECT_DIRECTORIES (tuple[str]): Tuple containing names of directories
+            to be created.
+        __project_name (str): Name of the project.
+    """
+    PROJECT_DIRECTORIES: Tuple[str] = ("include", "bin", "config", "lib",
+                                       "src", "tests")
     __project_name: str
 
     def __init__(self, provided_project_name: str) -> None:
+        """
+        Initialize the ProjectCreator class with a project name.
+
+        Args:
+            provided_project_name (str): Name of the project.
+        """
         self.__project_name = provided_project_name
         return None
 
-    # Method that creates boilerplate of the project.
     @staticmethod
     def create_boilerplate() -> bool:
+        """
+        Create the boilerplate structure of the project.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
         if len(sys.argv) != 3:
             print("Incorrect amount of arguments were provided.",
                   file=sys.stderr)
@@ -46,10 +67,17 @@ class ProjectCreator:
                 return False
         return True
 
-    # Method that removes directories on failure
     @staticmethod
     def clean_project(project_name: str) -> bool:
-        # Deletes project root directory
+        """
+        Remove project directories on failure.
+
+        Args:
+            project_name (str): Name of the project directory.
+
+        Returns:
+            bool: True if cleaning is successful, False otherwise.
+        """
         try:
             # False from remove_directory is returned when directory does not
             # exist. It is fine for this method, because it is called after
