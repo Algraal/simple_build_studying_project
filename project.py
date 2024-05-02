@@ -3,7 +3,7 @@ import shutil
 import sys
 import subprocess
 import re
-from typing import List
+from typing import List, Type
 from utility import is_directory, is_file, remove_directory
 
 
@@ -188,7 +188,7 @@ class Project:
                             "compile_commands.json"), "compile_commands.json"])
         except Exception as e:
             raise ValueError(f"Error in complete_building: {e}")
-    
+
     # Runs built program in bin directory
     def run_build(self, args: List[str] = []) -> None:
         try:
@@ -201,8 +201,46 @@ class Project:
                 print(f"Program {self.__executable_name} is started.")
                 # Creates list what will be passed to execve call
                 path_args_list = [path_to_executable] + args
-                subprocess.run(path_args_list, check = True)
+                subprocess.run(path_args_list, check=True)
             else:
                 raise ValueError("Error: executable file does not exist")
         except Exception as e:
             raise ValueError(f"Error in run_build: {e}")
+
+    @staticmethod
+    def build_and_run_using_cmake() -> bool:
+
+        if len(sys.argv) < 3 or len(sys.argv) > 4:
+            print("Wrong amount arguments for this option were provided.")
+            return False
+        try:
+            # Third argument is a path to root directory. If there is no third
+            # argument script checks if current or parent directory is a root.
+            if len(sys.argv) == 4:
+                project_to_build: Type[Project] = Project(sys.argv[3])
+            else:
+                project_to_build: Type[Project] = Project()
+            project_to_build.create_build_directory(sys.argv[2])
+            project_to_build.run_cmake()
+            project_to_build.complete_building()
+            project_to_build.run_build()
+            return True
+        except Exception as e:
+            print(f"Error in build_and_run_using_cmake: {e}")
+            return False
+
+    @staticmethod
+    def run_with_args() -> None:
+        project_to_build: Type[Project] = Project()
+        try:
+            arguments = []
+            print("Enter arguments if neccessary,"
+                  " otherwise enter empty string.")
+            while True:
+                user_input = input("Enter argument: ")
+                if not user_input:
+                    break
+                arguments += user_input
+            project_to_build.run_build(arguments)
+        except Exception as e:
+            raise ValueError(f"Error in run_with_args: {e}")
