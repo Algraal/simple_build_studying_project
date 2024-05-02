@@ -138,7 +138,7 @@ def create_directory(directory_name: str) -> bool:
     """
     # Checks if provided path exists directory
     try:
-        if not is_directory(directory_name):
+        if is_directory(directory_name):
             return False
     except OSError as e:
         print(f"Error in create_directory: {e}", file=sys.stderr)

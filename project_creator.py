@@ -1,57 +1,61 @@
-
 import os
-from utility import remove_directory
+import sys
+from utility import remove_directory, create_directory
 # This script creates project directory for c++ project
 
 
-PROJECT_DIRECTORIES = ("include", "bin", "config", "lib", "src", "tests")
-
 class ProjectCreator:
+    PROJECT_DIRECTORIES = ("include", "bin", "config", "lib", "src", "tests")
     __project_name: str
-    def __init__(self, project_name: str) -> None:
-        self.__project_name = project_name
-        
+
+    def __init__(self, provided_project_name: str) -> None:
+        self.__project_name = provided_project_name
+        return None
+
+    # Method that creates boilerplate of the project.
+    @staticmethod
+    def create_boilerplate() -> bool:
+        if len(sys.argv) != 2:
+            print("Incorrect amount of arguments were provided.",
+                  file=sys.stderr)
+        PC = ProjectCreator(sys.argv[1])
         # Creates project root directory
-        Main.create_directory(project_name)
+        if not create_directory(PC.__project_name):
+            return False
         # Moves to the created root directory
         try:
-            os.chdir(project_name)
+            os.chdir(PC.__project_name)
             print(os.getcwd())
-        except Exception as e:
-            Main.clean_project(project_name)
-            print(f"Failed to enter {project_name}: {e}. Aborting...")
-            return None
+        except OSError as e:
+            ProjectCreator.clean_project(PC.__project_name)
+            print(f"Failed to enter {PC.__project_name}: {e}. Aborting...",
+                  file=sys.stderr)
+            return False
 
         # Creates project directories
-        for directory in PROJECT_DIRECTORIES:
-            if not Main.create_directory(directory):
-                Main.clean_project(project_name)
-                return None
-        return None
-    # Method that creates directory, returns True if no Exception appears
-    @staticmethod
-    def create_directory(directory_name: str) -> bool:
-        try:
-            os.mkdir(directory_name)
-            print(f"Directory {directory_name} created successfully")
-            return True
-        except Exception as e:
-            print(f"Failed to create directory {directory_name}: {e}. Aborting...")
-            return False
+        for directory in ProjectCreator.PROJECT_DIRECTORIES:
+            try:
+                # If False is returned, it means that directory already exists,
+                # that is not a problem
+                create_directory(directory)
+            # If OS error appears project should be cleaned. There is no sense
+            # in partly created boilerplate.
+            except OSError:
+                ProjectCreator.clean_project(PC.__project_name)
+                return False
+        return True
+
     # Method that removes directories on failure
     @staticmethod
     def clean_project(project_name: str) -> bool:
-        # deletes project root directory
-        if not os.getcwd().endswith(project_name):
-            return Main.delete_directory(project_name)
-        else:
-            for directory in PROJECT_DIRECTORIES:
-                Main.delete_directory(directory)
-            os.chdir("..")
-            Main.clean_project(project_name)
-        return False
+        # Deletes project root directory
+        try:
+            # False from remove_directory is returned when directory does not
+            # exist. It is fine for this method, because it is called after
+            # error in creating directories.
+            remove_directory(project_name)
+            return True
 
-
-if __name__ == "__main__":
-    app = Main()
-
+        except OSError as e:
+            print(f"Project cannot be cleaned: {e}.", file=sys.stderr)
+            return False

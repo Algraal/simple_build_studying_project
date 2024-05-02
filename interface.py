@@ -1,5 +1,6 @@
 from project import Project
 from oop_create_cmake import CmakeGenerator
+from project_creator import ProjectCreator
 
 from typing import Callable, List
 from dataclasses import dataclass
@@ -15,8 +16,17 @@ class Option:
 class Interface:
     __options: List[Option]
 
-    def __init__(self, options: List[Option]) -> None:
-        self.__options = options
+    def __init__(self) -> None:
+        self.__options = [
+                # br for build and run
+                Option("br", Interface.br_option),
+                # gc for generate cmake
+                Option("gs", Interface.gc_option),
+                # ra for run with arguments
+                Option("ra", Interface.ra_option),
+                # np for new project
+                Option("np", Interface.np_option)
+                ]
         self.run_options()
         return None
 
@@ -43,3 +53,7 @@ class Interface:
     # Generate cmake
     def gc_option():
         CmakeGenerator.create_cmake_option()
+
+    # Creates new project
+    def np_option():
+        ProjectCreator.create_boilerplate()
