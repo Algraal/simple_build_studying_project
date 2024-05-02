@@ -58,7 +58,6 @@ class CmakeGenerator:
         """
         try:
             dir_name: str = os.path.basename(os.getcwd())
-            print(dir_name)
             self.__raw_src_list += [os.path.join(dir_name, file) for file in
                                     os.listdir()]
         except OSError as e:
@@ -135,7 +134,6 @@ class CmakeGenerator:
         self.__src_list.insert(0, element_to_move)
         return True
 
-    # Generates CMakeLists.txt
     def generate_cmake(self) -> bool:
         """
         Generates the CMakeLists.txt file for the project based on the
@@ -152,9 +150,7 @@ class CmakeGenerator:
 
         try:
             # Moves to the project root directory from src
-            print("before")
             os.chdir(os.path.pardir)
-            print("after")
             self.fill_content()
             filehandler = open("CMakeLists.txt", "w", encoding="utf-8")
             filehandler.write(self.__cmake_content)
@@ -164,8 +160,6 @@ class CmakeGenerator:
             print(f'Error: {e}')
             return False
 
-    # Fills content string used for initializing CMakeLists.txt using values
-    # from private properties of CmakeGenerator instance
     def fill_content(self) -> None:
         """
         Fills the __cmake_content string with project-related Cmake commands.

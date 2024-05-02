@@ -1,10 +1,11 @@
 import os
 import shutil
-import subprocess
 import sys
+import subprocess
 import re
 from typing import List
 from utility import is_directory, is_file, remove_directory
+
 
 # Class that has methods and properties to handle building project
 class Project:
@@ -26,15 +27,15 @@ class Project:
             self.__current_location = os.path.abspath(os.getcwd())
             self.__root_directory = ""
             self.__build_directory = ""
-            user_path = input("Enter path to a project`s root directory, "\
-                             "enter empty string for auto-search: ")
+            user_path = input("Enter path to a project`s root directory, "
+                              "enter empty string for auto-search: ")
             if user_path == "":
                 self.find_root_directory()
             else:
                 self.check_if_root_directory(user_path)
 
             if not self.__root_directory:
-                raise ValueError(f"Error: could not find root directory.")
+                raise ValueError("Error: could not find root directory.")
 
             if self.__root_directory != self.__current_location:
                 self.move_to_directory(self.__root_directory)
@@ -52,6 +53,7 @@ class Project:
 
         except Exception as e:
             raise ValueError(f"Error during project initialization: {e}")
+
     # Creates build directory, if exists removes it completly and creates
     # another one
     def create_build_directory(self, dir_build) -> None:
@@ -59,7 +61,8 @@ class Project:
             if self.__current_location != self.__root_directory:
                 self.move_to_directory(self.__root_directory)
             # Absolute path to expected directory for build
-            path_to_dir_build = os.path.join(self.__current_location, dir_build)
+            path_to_dir_build = os.path.join(self.__current_location,
+                                             dir_build)
             if is_directory(path_to_dir_build):
                 remove_directory(path_to_dir_build)
             os.mkdir(path_to_dir_build)
@@ -71,7 +74,7 @@ class Project:
     def find_in_cmake(self, pattern: str) -> str:
         try:
             if self.__current_location != self.__root_directory:
-                    self.move_to_directory(self.__root_directory)
+                self.move_to_directory(self.__root_directory)
 
             with open(self.PROJECT_ROOT_FILE, 'r', encoding='utf-8') as filehandler:
                 content = filehandler.read()
@@ -83,9 +86,16 @@ class Project:
 
             search_result = match.group(1)
             return search_result
-        except Exception as e:
-            raise ValueError(f"Error in find_in_cmake: {e}")
-    # Checks if provided name is a root directory, sets property 
+        except FileNotFoundError:
+            print(f"File {self.__PROJECT_ROOT_FILE} not found. Aborting")
+            # Is not a error of script execution
+            sys.exit(0)
+        except OSError:
+            # Permission error, isADirectoryError e.t.c.
+            print(f"OS error occured to open {self.__PROJECT_ROOT_FILE}")
+            sys.exit(0)
+
+    # Checks if provided name is a root directory, sets property
     # __root_directory. Returns True on success, otherwise returns False
     # sets __root_directory to emprty string
     def check_if_root_directory(self, directory_path) -> bool:
@@ -102,10 +112,10 @@ class Project:
         except Exception as e:
             raise ValueError(f"Error in check_if_root_directory: {e}")
 
-    # Checks if the current or a parent directories is project`s root 
-    # directory, (directory with CMakeLists.txt is considered the project 
-    # root directory) sets __root_directory. Returns True on success, 
-    # otherwise False
+    # Checks if the current or a parent directories is project`s root
+    # directory, (directory with CMakeLists.txt is considered the project
+    # root directory) sets __root_directory. Aborts script if root directory
+    # can not be found or system error appeared.
     def find_root_directory(self) -> None:
         # List of files in the current directory
         try:
@@ -114,19 +124,24 @@ class Project:
             if self.PROJECT_ROOT_FILE in current_dir_files:
                 self.__root_directory = os.path.abspath(os.getcwd())
                 return None
-        # Platform independent way of getting list of files 
-        # in a previous directory 
+        # Platform independent way of getting list of files
+        # in a previous directory
             parent_directory_path = os.path.abspath(os.path.join(os.getcwd(),
-                                                os.pardir))
+                                                    os.pardir))
             previous_dir_files = os.listdir(parent_directory_path)
 
             if self.PROJECT_ROOT_FILE in previous_dir_files:
                 self.__root_directory = parent_directory_path
-                return None
+                return None 
+            else:
+                print(f"{self.PROJECT_ROOT_FILE} was not found in current or"
+                      "parent directory. Aborting")
+                return sys.exit(0)
+        except OSError as e:
+            print("System error appeared during indexing files in "
+                  f"find_root_directory: {e}. Aborting")
+            return sys.exit(0)
 
-            raise FileNotFoundError(f"Error: {self.PROJECT_ROOT_FILE} was not found.")
-        except Exception as e:
-            raise ValueError(f"Error in find_root_directory: {e}")
     # Moves to passed directory, changes __curent_position property of an object
     # Returns True on Success, otherwise False
     def move_to_directory(self, directory_name: str) -> None:
@@ -141,6 +156,7 @@ class Project:
                 raise ValueError(f"Error: {directory_name} is not a directory.")
         except Exception as e:
             raise ValueError(f"Error in move_to_directory: {e}")
+
     # Runs cmake to get Makefile done
     def run_cmake(self) -> None:
         try:
@@ -152,6 +168,7 @@ class Project:
             self.move_to_directory(self.__root_directory)
         except Exception as e:
             raise ValueError(f"Error in run_cmake: {e}")
+
     # Builds using Makefile 
     def complete_building(self) -> None:
         try:
@@ -160,8 +177,8 @@ class Project:
             subprocess.run(['cmake', '--build', '.'], check=True)
             # Creates path to expected old executable to remove it before
             # moving new executable to that directory
-            path_to_executable = os.path.join(self.__root_directory, "bin",\
-                                    self.__executable_name)
+            path_to_executable = os.path.join(self.__root_directory, "bin",
+                                              self.__executable_name)
             if is_file(path_to_executable):
                 os.remove(path_to_executable)
             shutil.move(self.__executable_name, path_to_executable)
@@ -176,9 +193,9 @@ class Project:
         try:
             if self.__current_location != self.__root_directory:
                 self.move_to_directory(self.__root_directory)
-            path_to_executable = os.path.abspath( \
-                    os.path.join(self.__root_directory, 'bin', \
-                            self.__executable_name))
+            path_to_executable = os.path.abspath(
+                    os.path.join(self.__root_directory, 'bin',
+                                 self.__executable_name))
             if is_file(path_to_executable):
                 print(f"Program {self.__executable_name} is started.")
                 # Creates list what will be passed to execve call
