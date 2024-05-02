@@ -12,7 +12,8 @@ def is_directory(directory_name: str) -> bool:
         directory_name (str): The path to check.
 
     Returns:
-        bool: True if the path exists and is a directory, False otherwise.    """
+        bool: True if the path exists and is a directory, False otherwise.
+    """
     try:
         directory_path: str = os.path.abspath(directory_name)
         return os.path.exists(directory_path) and os.path.isdir(directory_path)

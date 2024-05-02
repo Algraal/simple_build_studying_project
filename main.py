@@ -23,8 +23,8 @@ class Main:
     # Runs option that was passed as argument
     def run_options(self) -> bool:
         # Script name and one arg are expected
-        if len(sys.argv) != 2:
-            print("Only one argument is expected.")
+        if len(sys.argv) == 1:
+            print("Arguments were not provided.")
             return False
         for option in self.__options:
             if option.option_name == sys.argv[1]:
@@ -34,23 +34,25 @@ class Main:
 
     @staticmethod
     def create_cmake_option() -> bool:
-        CG: Type[CmakeGenerator] = CmakeGenerator()
+        if (len(sys.argv) != 3):
+            print("Project name was not provided. Enter it as a second arg.")
+            return False
+        CG: Type[CmakeGenerator] = CmakeGenerator(sys.argv[2])
         return CG.generate_cmake()
 
     @staticmethod
     def build_and_run_using_cmake() -> bool:
+        if len(sys.argv) < 3 or len(sys.argv) > 4:
+            print("Wrong amount arguments for this option were provided.")
+            return False
         try:
-            project_to_build: Type[Project] = Project()
-            while True:
-                build_dir = input("Enter: 'build', 'debug', or "
-                                  "'exit' (to cancel): ")
-                if build_dir in ['build', 'debug', 'exit']:
-                    break
-            if build_dir == 'exit':
-                print("Building was canceled. Aborting...")
-                return False
+            # Third argument is a path to root directory. If there is no third
+            # argument script checks if current or parent directory is a root.
+            if len(sys.argv) == 4:
+                project_to_build: Type[Project] = Project(sys.argv[3])
             else:
-                project_to_build.create_build_directory(build_dir)
+                project_to_build: Type[Project] = Project()
+            project_to_build.create_build_directory(sys.argv[2])
             project_to_build.run_cmake()
             project_to_build.complete_building()
             project_to_build.run_build()

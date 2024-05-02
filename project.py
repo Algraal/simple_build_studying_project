@@ -14,12 +14,13 @@ class Project:
     __current_location: str
     __root_directory: str
     __build_directory: str
+    __userpath: str
     # Directory with this const variable is considered root
     PROJECT_ROOT_FILE = "CMakeLists.txt"
     PATTERN_PROJECT_NAME = re.compile(r"add_executable\((\w+)\s")
     PATTERN_EXECUTABLE_NAME = re.compile(r'add_executable\((\w+)')
 
-    def __init__(self) -> None:
+    def __init__(self, path: str = "") -> None:
         try:
             # sets initial values of object using CMakeList.txt
             self.__executable_name = ""
@@ -27,12 +28,11 @@ class Project:
             self.__current_location = os.path.abspath(os.getcwd())
             self.__root_directory = ""
             self.__build_directory = ""
-            user_path = input("Enter path to a project`s root directory, "
-                              "enter empty string for auto-search: ")
-            if user_path == "":
+            self.__user_path = path
+            if self.__user_path == "":
                 self.find_root_directory()
             else:
-                self.check_if_root_directory(user_path)
+                self.check_if_root_directory(self.__user_path)
 
             if not self.__root_directory:
                 raise ValueError("Error: could not find root directory.")
@@ -188,6 +188,7 @@ class Project:
                             "compile_commands.json"), "compile_commands.json"])
         except Exception as e:
             raise ValueError(f"Error in complete_building: {e}")
+    
     # Runs built program in bin directory
     def run_build(self, args: List[str] = []) -> None:
         try:
