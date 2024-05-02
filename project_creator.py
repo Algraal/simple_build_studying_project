@@ -15,10 +15,11 @@ class ProjectCreator:
     # Method that creates boilerplate of the project.
     @staticmethod
     def create_boilerplate() -> bool:
-        if len(sys.argv) != 2:
+        if len(sys.argv) != 3:
             print("Incorrect amount of arguments were provided.",
                   file=sys.stderr)
-        PC = ProjectCreator(sys.argv[1])
+        # First arg is option, second the name of the project
+        PC = ProjectCreator(sys.argv[2])
         # Creates project root directory
         if not create_directory(PC.__project_name):
             return False
