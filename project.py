@@ -282,8 +282,9 @@ class Project:
             bool: True if program finished successfully, otherwise False.
 
         """
+        arguments: List[str] = []
         if len(sys.argv) >= 3:
-            arguments: List[str] = sys.argv[2:]
+            arguments = sys.argv[2:]
         try:
             # If program inside project root directory it looks for executable
             # in "root/bin"
