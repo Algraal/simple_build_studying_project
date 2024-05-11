@@ -199,7 +199,7 @@ class CmakeGenerator:
             # Include "include" directory if it exists
             if is_directory(os.path.join(os.getcwd(), "include")):
                 self.__cmake_content += f"target_include_directories({self.__project_name} "
-                self.__cmake_content += "PUBLIC \"{CMAKE_SOURCE_DIR}/include\")\n"
+                self.__cmake_content += "PUBLIC \"${CMAKE_SOURCE_DIR}/include\")\n"
             else:
                 print("Include directory was not found.")
         except OSError as e:
